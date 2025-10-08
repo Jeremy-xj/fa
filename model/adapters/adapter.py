@@ -68,20 +68,15 @@ class Adapter(nn.Module):
     def fuse(self, block_idx, x, clip_features, spatial_shape):
         if block_idx in self.fusion_map.keys():
             clip_layer = self.fusion_map[block_idx]
-            adapter_layer = block_idx
             clip_dim = clip_features[clip_layer].shape[2]  # clip features NLD
 
             fusion = Fusion(clip_dim, self.num_features).to(self.device)
             L = spatial_shape[0] * spatial_shape[1]
-            x = torch.cat(
-                [
-                    x[:, :-L, ...],  # query
-                    # fuse vision token x(N,a_L,D) clip_f[i] (N,c_L,D)
-                    fusion(x[:, -L:, ...], clip_features[clip_layer], spatial_shape)
-                ],
-                dim=1
-            )
-            return x
+
+            # 计算融合后的 patch 特征
+            fused_patch = fusion(x[:, -L:, ...], clip_features[clip_layer], spatial_shape)
+
+            x[:, -L:, ...] = fused_patch
 
     def intra_contra(self, block_idx, x, patch_labels, image_labels, spatial_shape):
         loss = 0
