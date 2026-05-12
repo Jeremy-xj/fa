@@ -7,6 +7,7 @@ from torch.nn import functional as F
 from model.layer import MLP
 
 class ClipIntraBlock(nn.Module):
+    # clip intra block
     def __init__(self,num_features):
         super().__init__()
         self.num_features = num_features
