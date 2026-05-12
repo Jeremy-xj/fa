@@ -1,6 +1,6 @@
 # log dir 
-log_dir: /data/cuixinjie/FA/logs/new
-#log_dir: /data/cuixinjie/DsClip_V2/log
+log_dir: ./logs/new
+#log_dir: /data/DsClip_V2/log
 lmdb: False
 mode: train
 dry_run: false
@@ -36,7 +36,8 @@ test_dataset: [FaceForensics++]
 #test_dataset: [FF-F2F]
 
 #dataset_json_folder: '/media/ouc/新加卷/DS_CLIP_V2/dataset/dataset_json'
-dataset_json_folder: '/data/cuixinjie/dataset/dataset_json'
+dataset_json_folder: '/public/zxj/ForensicsAdapter/data/dataset/dataset_json'
+dataset_root: '/public/zxj/DeepfakeBench/datasets/rgb'
 
 compression: c23  # compression-level for videos
 train_batchSize: 16   # training batch size

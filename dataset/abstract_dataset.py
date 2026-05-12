@@ -81,6 +81,17 @@ class DeepfakeAbstractBaseDataset(data.Dataset):
         self.mode = mode
         self.compression = config['compression']
         self.frame_num = config['frame_num'][mode]
+        self.dataset_json_folder = config['dataset_json_folder']
+        self.dataset_root = config.get('dataset_root')
+        self.path_prefix_candidates = []
+        if self.dataset_root:
+            self.path_prefix_candidates.append(self.dataset_root)
+        # Common local fallback roots.
+        self.path_prefix_candidates.extend([
+            os.path.dirname(self.dataset_json_folder),
+            os.path.dirname(os.path.dirname(self.dataset_json_folder)),
+            '/public/zxj/DeepfakeBench/datasets/rgb',
+        ])
 
         # Dataset dictionary
         self.image_list = []
@@ -159,7 +170,7 @@ class DeepfakeAbstractBaseDataset(data.Dataset):
 
         # Try to get the dataset information from the JSON file
         try:
-            with open(os.path.join(self.config['dataset_json_folder'], dataset_name + '.json'), 'r') as f:
+            with open(os.path.join(self.dataset_json_folder, dataset_name + '.json'), 'r') as f:
                 dataset_info = json.load(f)
         except Exception as e:
             print(e)
@@ -202,6 +213,10 @@ class DeepfakeAbstractBaseDataset(data.Dataset):
                     raise ValueError(f'Label {video_info["label"]} is not found in the configuration file.')
                 label = self.config['label_dict'][video_info['label']]
                 frame_paths = video_info['frames']
+                frame_paths = [self.resolve_path(one_path) for one_path in frame_paths]
+                frame_paths = [one_path for one_path in frame_paths if os.path.exists(one_path)]
+                if len(frame_paths) == 0:
+                    continue
 
                 # Select self.frame_num frames evenly distributed throughout the video
                 total_frames = len(frame_paths)
@@ -218,10 +233,37 @@ class DeepfakeAbstractBaseDataset(data.Dataset):
 
         # Shuffle the label and frame path lists in the same order
         shuffled = list(zip(label_list, frame_path_list))
+        if len(shuffled) == 0:
+            # Happens when all frames are filtered out (e.g. paths don't resolve on current machine).
+            # Let caller handle the empty result via the existing length assertion in __init__.
+            return [], []
         random.shuffle(shuffled)
         label_list, frame_path_list = zip(*shuffled)
 
         return frame_path_list, label_list
+
+    @staticmethod
+    def normalize_path(file_path):
+        # DeepfakeBench jsons may contain Windows separators on Linux.
+        return os.path.normpath(file_path.replace('\\', '/'))
+
+    def resolve_path(self, file_path):
+        norm_path = self.normalize_path(file_path)
+        if os.path.isabs(norm_path):
+            return norm_path
+        # Try as-is from current working directory first.
+        if os.path.exists(norm_path):
+            return norm_path
+        for prefix in self.path_prefix_candidates:
+            if not prefix:
+                continue
+            candidate = os.path.normpath(os.path.join(prefix, norm_path))
+            if os.path.exists(candidate):
+                return candidate
+        # Return a best-effort absolute candidate for clearer error messages.
+        if self.path_prefix_candidates and self.path_prefix_candidates[0]:
+            return os.path.normpath(os.path.join(self.path_prefix_candidates[0], norm_path))
+        return norm_path
 
     def load_rgb(self, file_path):
         """
@@ -237,6 +279,7 @@ class DeepfakeAbstractBaseDataset(data.Dataset):
             ValueError: If the loaded image is None.
         """
         size = self.config['resolution']
+        file_path = self.resolve_path(file_path)
         assert os.path.exists(file_path), f"{file_path} does not exist"
         img = cv2.imread(file_path)
         if img is None:
@@ -262,6 +305,7 @@ class DeepfakeAbstractBaseDataset(data.Dataset):
         size = self.config['resolution']
         if file_path is None:
             return np.zeros((size, size, 1))
+        file_path = self.resolve_path(file_path)
         if os.path.exists(file_path):
             mask = cv2.imread(file_path, 0)
             if mask is None:
@@ -287,6 +331,7 @@ class DeepfakeAbstractBaseDataset(data.Dataset):
         """
         if file_path is None:
             return np.zeros((81, 2))
+        file_path = self.resolve_path(file_path)
         if os.path.exists(file_path):
             landmark = np.load(file_path)
             return np.float32(landmark)

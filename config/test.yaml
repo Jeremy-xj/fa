@@ -1,6 +1,6 @@
 # log dir
-log_dir: /data/cuixinjie/FA/logs/test
-#log_dir: /data/cuixinjie/DsClip_V2/log
+log_dir: /data/FA/logs/test
+#log_dir: /data/DsClip_V2/log
 lmdb: False
 mode: text
 dry_run: false
@@ -28,7 +28,9 @@ head_num: 16  # for  clip_model_name: "ViT-L/14"
 all_dataset: [FaceForensics++, FF-F2F, FF-DF, FF-FS, FF-NT, FaceShifter, DeepFakeDetection, Celeb-DF-v1, Celeb-DF-v2, DFDCP, DFDC, DeeperForensics-1.0, UADFV]
 train_dataset: [FaceForensics++]
 #test_dataset: [FaceForensics++]
-test_dataset: [Celeb-DF-v1 ,Celeb-DF-v2, DFDCP, DFDC, DeepFakeDetection]
+# Note: keep only datasets that exist on this machine by default.
+# Add DFDC / DeepFakeDetection / FaceShifter after you extract/download them.
+test_dataset: [FaceForensics++, Celeb-DF-v1, Celeb-DF-v2, DFDCP, UADFV]
 
 #test_dataset: [FaceForensics++]
 
@@ -36,7 +38,8 @@ test_dataset: [Celeb-DF-v1 ,Celeb-DF-v2, DFDCP, DFDC, DeepFakeDetection]
 #test_dataset: [FF-F2F]
 
 #dataset_json_folder: '/media/ouc/新加卷/DS_CLIP_V2/dataset/dataset_json'
-dataset_json_folder: '/data/cuixinjie/dataset/dataset_json'
+dataset_json_folder: '/public/zxj/ForensicsAdapter/data/dataset/dataset_json'
+dataset_root: '/public/zxj/DeepfakeBench/datasets/rgb'
 
 compression: c23  # compression-level for videos
 train_batchSize: 20   # training batch size
@@ -123,7 +126,7 @@ start_epoch: 0    # manual epoch number (useful for restarts)
 save_epoch: 2   # interval epochs for saving models
 rec_iter: 100   # interval iterations for recording
 #logdir: /media/ouc/新加卷/DS_CLIP_V2/log  # folder to output images and logs
-logdir: /data/cuixinjie/FA/log/Ablation  # folder to output images and logs
+logdir: /data/FA/log/Ablation  # folder to output images and logs
 
 
 manualSeed: 1020   # manual seed for random number generation
