@@ -1,0 +1,4 @@
+# Checkpoints (GitHub single-file limit 100 MB; use Git LFS or external storage)
+*.pth
+*.pt
+*.ckpt
